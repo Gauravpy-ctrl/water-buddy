@@ -124,4 +124,21 @@ STATUS: All 8 plan.txt steps are done. The app is fully working end-to-end
 
 STATUS: App works as a real double-click desktop app AND auto-starts on
         login. Both Desktop and Startup shortcuts point at
-        dist\Water_Buddy.exe. Nothing outstanding from the user's requests.
+        dist\Water_Buddy.exe.
+
+[2026-07-14] Published to GitHub per user request ("share as downloadable
+             release"):
+             - Installed GitHub CLI (winget) - user completed the browser
+               device-code login themselves (account: Gauravpy-ctrl).
+             - Added .gitignore (excludes __pycache__/, build/, dist/,
+               .claude/, and the two original uploaded reference PNGs -
+               those are superseded by the cropped assets/*.png).
+             - git init + initial commit (22 files: source, assets,
+               requirements.txt, Water_Buddy.spec, plan.txt, progress.txt).
+             - Created public repo: https://github.com/Gauravpy-ctrl/water-buddy
+             - Created Release v1.0.0 with dist/Water_Buddy.exe attached:
+               https://github.com/Gauravpy-ctrl/water-buddy/releases/tag/v1.0.0
+
+STATUS: Published. Repo + downloadable release are both live. No README.md
+        was added (project convention: don't create doc files unless asked)
+        - offered to the user as a follow-up, not done yet.

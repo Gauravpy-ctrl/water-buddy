@@ -1,0 +1,5 @@
+Water Buddy - GitHub Links
+============================
+
+Repo:               https://github.com/Gauravpy-ctrl/water-buddy
+Download (v1.0.0):   https://github.com/Gauravpy-ctrl/water-buddy/releases/tag/v1.0.0
