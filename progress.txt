@@ -1,0 +1,127 @@
+WATER BUDDY - PROGRESS LOG
+============================
+(See plan.txt for the full step list this log follows)
+
+[2026-07-14] Plan written to plan.txt. Starting execution.
+
+[2026-07-14] Step 1 DONE - Created requirements.txt (customtkinter>=5.2.0, Pillow>=10.0.0).
+
+[2026-07-14] Step 2 DONE - Created assets/ folder + assets/README.txt listing the
+             exact 9 filenames animations.py expects (idle.png, happy.png,
+             angry.png, walk_in1-4.png, walk_out1-4.png).
+
+[2026-07-14] Step 3 DONE - Fixed reminder.py timer bug:
+             REMINDER_INTERVAL_MS: 5000 -> 45*60*1000 (45 min, matches docstring)
+             SNOOZE_INTERVAL_MS:  10000 -> 5*60*1000  (5 min, matches docstring)
+
+[2026-07-14] Step 3b DONE - Removed stray `print("ReminderManager exists...")`
+             debug line that ran at import time in reminder.py.
+
+[2026-07-14] Step 4 DONE - Added DesktopPetUI.USER_NAME = "Arwa" constant in
+             ui.py and switched the greeting message to use it via f-string,
+             so the name is now a one-line edit instead of buried in text.
+
+[2026-07-14] Step 5 DONE - py_compile passed on all 4 files (no syntax errors).
+             Installed dependencies from requirements.txt (customtkinter 6.0.0,
+             darkdetect 0.8.0 pulled in as a sub-dependency; Pillow 12.2.0 was
+             already present). Verified AnimationManager wiring is correct by
+             instantiating it directly - it fails with exactly one expected
+             error: "Missing asset: assets\idle.png". This confirms every other
+             part of the app (imports, window setup, timer logic, button
+             wiring) is in working order.
+
+[2026-07-14] User uploaded a labeled sprite reference sheet (cat character,
+             background already removed): Gemini_Generated_Image_jpq941jpq941jpq9-removebg-preview.png
+             at project root. It contained all 11 needed poses in one image
+             (idle/happy/angry/4x walk_in/4x walk_out), each captioned.
+
+[2026-07-14] Step 6 DONE - Wrote a one-off cropper (numpy + PIL) that finds
+             each sprite via alpha-channel row/column projection (the two
+             densest horizontal bands are the sprite rows; column gaps split
+             each row into individual sprites), tight-crops each to content,
+             pads to a square, and saves as assets/idle.png, happy.png,
+             angry.png, walk_in1-4.png, walk_out1-4.png. Verified visually via
+             a contact sheet - all 11 crops are clean.
+
+[2026-07-14] Verified AnimationManager loads all 11 real assets without
+             error, then ran the actual app end-to-end (scripted, skipping
+             the 45-min wait) and screenshotted each state. Found and fixed
+             two real rendering bugs surfaced only by using real assets:
+
+             BUG 1 - magenta fringe around the pet sprite. Root cause:
+             animations.py resized frames to 220x220 with PIL's default
+             bicubic filter, which blends the alpha channel at sprite edges;
+             any partial-alpha edge pixel is not exactly the window's
+             -transparentcolor key (#ff00ff) so Windows' colorkey
+             transparency can't strip it, leaving a visible rim. Fix:
+             animations.py now resizes with Image.NEAREST (no alpha
+             blending) - appropriate anyway for pixel-art sprites.
+
+             BUG 2 - Yes / "Remind Me In 5 Min" button text invisible
+             (buttons rendered as flat color bars, no label). Root cause:
+             NOT a customtkinter bug (reproduced identically with a plain
+             tk.Button, and with customtkinter 6.0.0 and 5.2.2 both) - it's
+             a Tk geometry-manager quirk. ui.py's hide_bubble()/show_bubble()
+             used bubble_frame.pack_forget()/pack() to toggle the speech
+             bubble (which contains the buttons). Whenever that pack_forget/
+             pack cycle happened AND a sibling widget in the same pack-
+             managed container (image_label) had its image changed via
+             .configure(image=...), the re-shown frame's button text canvas
+             came back blank. Confirmed via ~15 isolated repro scripts
+             (see scratchpad, not kept in this repo) narrowing it down to
+             exactly this combination. Fix: ui.py now positions bubble_frame
+             and image_label with place()/place_forget() instead of pack()/
+             pack_forget() at the container level, which avoids the sibling
+             relayout cascade entirely. button_frame's own pack_forget()/
+             pack() (show/hide the Yes/Snooze buttons within the bubble) was
+             left as-is since it has no image-holding sibling and tested
+             fine.
+
+[2026-07-14] Re-ran the full end-to-end test after both fixes: verified all
+             three bubble states render correctly with clean text and no
+             fringe -- "Hey Arwa! Did you drink water?" with legible Yes /
+             Remind Me In 5 Min buttons, "Good job!" (happy sprite, no
+             buttons), and "Fine... I'll come back." (angry sprite, no
+             buttons). Also swapped customtkinter 6.0.0 -> 5.2.2 (pinned in
+             requirements.txt) since 6.0.0 is very new; 5.2.2 is the better-
+             established release and the bug reproduced identically on both,
+             so there was no reason to stay on the newer one.
+
+STATUS: All 8 plan.txt steps are done. The app is fully working end-to-end
+        with the user's real artwork. Remaining optional item is plan.txt
+        step 8 (auto-start on Windows login), not started unless requested.
+
+[2026-07-14] User renamed - USER_NAME in ui.py changed from "Arwa" to
+             "Gaurav". Also changed reminder cadence: REMINDER_INTERVAL_MS
+             in reminder.py changed from 45 min to 10 min (SNOOZE_INTERVAL_MS
+             stays 5 min, matching the "Remind Me In 5 Min" button text).
+
+[2026-07-14] Packaged as a standalone Windows app per user request ("want it
+             like an app for my pc"):
+             - Installed PyInstaller.
+             - Generated assets/icon.ico (multi-res) from happy.png.
+             - Built dist/Water_Buddy.exe via:
+               python -m PyInstaller --onefile --windowed --icon="assets/icon.ico"
+                 --add-data "assets;assets" --name "Water_Buddy" main.py
+             - Verified the exe launches standalone (no Python needed) and
+               successfully loads all 11 bundled assets without crashing -
+               confirmed via EnumWindows (a "Water Buddy" window exists,
+               IsWindowVisible=False, matching expected HIDDEN startup state)
+               after the process stayed alive past the point where a missing-
+               asset FileNotFoundError would have killed it immediately.
+             - Created a "Water Buddy.lnk" shortcut on the Desktop
+               (C:\Users\KIIT0001\Desktop\Water Buddy.lnk) pointing at the exe.
+             - NOTE: PyInstaller build/dist folders and *.spec file were
+               added to the project root by this step - not yet gitignored
+               since this project has no git repo.
+
+[2026-07-14] User confirmed they also want auto-start on login. Created a
+             second shortcut, same target, in the Windows Startup folder:
+             C:\Users\KIIT0001\AppData\Roaming\Microsoft\Windows\Start Menu\
+             Programs\Startup\Water Buddy.lnk
+             Water_Buddy.exe now launches automatically (silently, no
+             console) every time this Windows user logs in.
+
+STATUS: App works as a real double-click desktop app AND auto-starts on
+        login. Both Desktop and Startup shortcuts point at
+        dist\Water_Buddy.exe. Nothing outstanding from the user's requests.

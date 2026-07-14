@@ -1,0 +1,9 @@
+__pycache__/
+*.pyc
+build/
+dist/
+.claude/
+
+# Original uploaded reference art (already cropped into assets/)
+Gemini_Generated_Image_jpq941jpq941jpq9.png
+Gemini_Generated_Image_jpq941jpq941jpq9-removebg-preview.png

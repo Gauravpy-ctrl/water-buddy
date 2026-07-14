@@ -1,0 +1,69 @@
+WATER BUDDY - DRINK WATER REMINDER
+Implementation Plan
+====================================
+
+GOAL
+----
+Get the existing 4-file tkinter/customtkinter desktop pet
+(main.py, reminder.py, ui.py, animations.py) into a working,
+correctly-timed water reminder app running on this Windows machine.
+
+CURRENT STATE (as analyzed)
+----------------------------
+- Architecture is already solid: AppController (main.py) drives a state
+  machine, delegates to ReminderManager (timers), DesktopPetUI (window/
+  bubble/buttons), AnimationManager (sprite frames).
+- Bugs found:
+  1. reminder.py timer constants are debug values (5s / 10s) but
+     docstrings/comments say 45 minutes / 5 minutes.
+  2. reminder.py has a stray `print(...)` debug line at import time.
+  3. ui.py hardcodes the greeting name "Arwa" directly in the string.
+  4. No requirements.txt for the customtkinter + Pillow dependencies.
+  5. No assets/ folder exists yet. animations.py expects these 9 PNGs
+     inside daily remainder/assets/:
+       idle.png
+       happy.png
+       angry.png
+       walk_in1.png, walk_in2.png, walk_in3.png, walk_in4.png
+       walk_out1.png, walk_out2.png, walk_out3.png, walk_out4.png
+     (any resolution is fine - AnimationManager resizes each to 220x220)
+
+DECISION (from user)
+---------------------
+User will supply their own PNG art for assets/. This plan does NOT
+generate placeholder art. Steps that need real assets are blocked
+until the user drops files into assets/.
+
+STEPS
+-----
+1. Create requirements.txt (customtkinter, Pillow).                 [no assets needed]
+2. Create assets/ folder + assets/README.txt listing exact filenames
+   the code expects, so the user knows what to drop in.             [no assets needed]
+3. Fix reminder.py:
+   - REMINDER_INTERVAL_MS -> 45 * 60 * 1000 (45 min)
+   - SNOOZE_INTERVAL_MS   -> 5  * 60 * 1000 (5 min)
+   - remove the stray print() debug line                            [no assets needed]
+4. Make the greeting name in ui.py a constant/configurable instead
+   of a hardcoded literal ("Arwa"), so it's a one-line edit.         [no assets needed]
+5. Sanity-compile all 4 files (py_compile) to catch syntax errors.   [no assets needed]
+6. BLOCKED ON USER: user drops their 9 PNGs into assets/.
+7. Once assets exist: run `python main.py`, verify manually:
+   - pet walks in from bottom-right after the timer fires
+   - speech bubble + Yes / "Remind Me In 5 Min" buttons appear
+   - Yes -> happy face, "Good job!", pet walks out, new 45-min timer starts
+   - Snooze -> angry face, "Fine... I'll come back.", pet walks out,
+     new 5-min timer starts
+   - window stays transparent/borderless/always-on-top, no crashes
+8. (Optional, not started unless requested) Auto-start on Windows
+   login via Startup folder shortcut or Task Scheduler.
+
+OUT OF SCOPE FOR NOW
+---------------------
+- Generating placeholder sprite art (user is supplying their own).
+- Packaging as a standalone .exe (PyInstaller) - can be a later step.
+- Auto-start on boot - optional step 8, only if requested.
+
+PROGRESS TRACKING
+------------------
+See progress.txt for a running log of what's been done, in the order
+it was completed, with timestamps/notes.
