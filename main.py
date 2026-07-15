@@ -11,6 +11,9 @@ import customtkinter as ctk
 
 from animations import AnimationManager
 from reminder import ReminderManager
+from settings import Settings
+from settings_ui import SettingsDialog
+from tray import TrayIcon
 from ui import DesktopPetUI
 
 
@@ -45,7 +48,15 @@ class AppController:
             image_label=self.ui.image_label,
             assets_dir=Path(__file__).resolve().parent / "assets",
         )
-        self.reminders = ReminderManager(self.root, self.handle_reminder)
+
+        self.settings = Settings()
+        self.reminders = ReminderManager(
+            self.root,
+            self.handle_reminder,
+            reminder_minutes=self.settings.reminder_minutes,
+            snooze_minutes=self.settings.snooze_minutes,
+        )
+        self.tray: TrayIcon | None = None
 
         self.state = PetState.HIDDEN
         self.x = 0
@@ -61,7 +72,32 @@ class AppController:
     def run(self) -> None:
         self.enter_hidden()
         self.reminders.start_initial_timer()
+
+        self.tray = TrayIcon(
+            icon_path=Path(__file__).resolve().parent / "assets" / "icon.ico",
+            on_open_settings=lambda: self.root.after(0, self.open_settings),
+            on_quit=lambda: self.root.after(0, self.quit_app),
+        )
+        self.tray.start()
+
         self.root.mainloop()
+
+    def open_settings(self) -> None:
+        SettingsDialog(
+            self.root,
+            current_reminder_minutes=self.settings.reminder_minutes,
+            current_snooze_minutes=self.settings.snooze_minutes,
+            on_save=self._apply_settings,
+        )
+
+    def _apply_settings(self, reminder_minutes: int, snooze_minutes: int) -> None:
+        self.settings.save(reminder_minutes, snooze_minutes)
+        self.reminders.apply_new_intervals(reminder_minutes, snooze_minutes)
+
+    def quit_app(self) -> None:
+        if self.tray is not None:
+            self.tray.stop()
+        self.root.destroy()
 
     def transition_to(self, state: PetState) -> None:
         self.state = state
@@ -128,7 +164,7 @@ class AppController:
         self.animations.set_happy()
         self.ui.show_good_job()
 
-        # Start next 10-minute reminder
+        # Start the next reminder (uses the user's configured interval)
         self.reminders.start_initial_timer()
 
         self.root.after(
