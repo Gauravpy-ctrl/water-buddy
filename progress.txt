@@ -142,3 +142,59 @@ STATUS: App works as a real double-click desktop app AND auto-starts on
 STATUS: Published. Repo + downloadable release are both live. No README.md
         was added (project convention: don't create doc files unless asked)
         - offered to the user as a follow-up, not done yet.
+
+[2026-07-14] User asked for the reminder timer to be customizable through
+             the app itself (not just source edits). Since the pet window
+             is hidden most of the time, added a persistent entry point:
+
+             - settings.py: Settings class, loads/saves
+               reminder_minutes/snooze_minutes to
+               %APPDATA%\WaterBuddy\config.json (survives restarts).
+             - reminder.py: refactored ReminderManager off the old fixed
+               *_INTERVAL_MS class constants -> instance-level
+               reminder_minutes/snooze_minutes set via constructor, plus
+               apply_new_intervals() which restarts whichever timer
+               (reminder or snooze) is currently active so a change takes
+               effect immediately, not just next cycle. Tracks
+               _active_kind internally to know which timer is live.
+             - settings_ui.py: SettingsDialog - small centered Toplevel,
+               two Entry fields (reminder/snooze minutes), Save/Cancel,
+               validates whole numbers >= 1.
+             - tray.py: TrayIcon wraps pystray.Icon, right-click menu with
+               "Set Reminder Timer..." and "Quit". Runs pystray's message
+               loop on a daemon thread (Tkinter must stay single-threaded,
+               so menu callbacks marshal back via root.after(0, ...)).
+             - main.py: AppController now owns a Settings instance, passes
+               its values into ReminderManager's constructor, starts the
+               TrayIcon in run(), and exposes open_settings()/quit_app().
+             - requirements.txt: added pystray>=0.19.0.
+
+             Verified end-to-end with a scripted test (test_settings.py in
+             scratchpad, not part of the repo): opened the dialog
+             programmatically, changed values to 20/3, saved, confirmed
+             ReminderManager picked up the new values live AND
+             config.json was written correctly; then confirmed a fresh
+             Settings() instance reloads 20/3 from disk. Reset the real
+             config.json back to 10/5 afterward since the test wrote to
+             the actual shared %APPDATA% path used by the installed exe.
+
+[2026-07-14] Rebuilt and republished per user confirmation ("yes"):
+             - No Water_Buddy.exe was running, so no need to kill anything
+               before overwriting dist/Water_Buddy.exe.
+             - Rebuilt with the same PyInstaller command as v1.0.0 (same
+               --onefile --windowed --icon --add-data "assets;assets").
+             - Verified the new exe launches without crashing and creates
+               the expected hidden "Water Buddy" window (same EnumWindows
+               check used for the original build).
+             - Committed + pushed source (main.py, reminder.py,
+               requirements.txt, settings.py, settings_ui.py, tray.py).
+             - Created Release v1.1.0 with the rebuilt exe attached:
+               https://github.com/Gauravpy-ctrl/water-buddy/releases/tag/v1.1.0
+             - Did NOT need to touch the Desktop/Startup .lnk shortcuts -
+               both point at dist\Water_Buddy.exe by path, which was
+               overwritten in place, so they pick up the new build
+               automatically next launch.
+
+STATUS: Customizable timer feature is live in both the source repo and the
+        installed exe (Desktop + Startup shortcuts). v1.1.0 is the current
+        published release.
