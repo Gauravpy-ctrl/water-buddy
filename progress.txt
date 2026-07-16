@@ -198,3 +198,43 @@ STATUS: Published. Repo + downloadable release are both live. No README.md
 STATUS: Customizable timer feature is live in both the source repo and the
         installed exe (Desktop + Startup shortcuts). v1.1.0 is the current
         published release.
+
+[2026-07-14] User asked for a custom-message feature ("custom alert their
+             own msg"). Clarified scope with user: one custom message
+             (not a rotating list) that replaces the default greeting.
+
+             - settings.py: added custom_message field (default ""),
+               load/save extended to persist it in the same
+               %APPDATA%\WaterBuddy\config.json.
+             - settings_ui.py: SettingsDialog gained a third field
+               ("Custom message", blank = use default), on_save signature
+               now (reminder_minutes, snooze_minutes, custom_message).
+             - ui.py: show_question() takes an optional custom_message arg;
+               falls back to the "Hey {USER_NAME}! Did you drink water?"
+               default when blank.
+             - main.py: enter_asking() passes self.settings.custom_message
+               through; _apply_settings() updated for the new 3-arg save.
+
+             Verified via scripted test (test_custom_msg.py in scratchpad):
+             set a custom message directly through Settings, triggered the
+             reminder, confirmed the bubble showed the custom text with
+             correct wrapping and working buttons. Reset config back to
+             defaults (10/5/"") afterward.
+
+[2026-07-14] Rebuilt and republished per user confirmation ("yess"):
+             - Found a live Water_Buddy.exe running (auto-started from the
+               Startup shortcut) - killed it first since PyInstaller can't
+               overwrite a locked exe.
+             - Rebuilt with the same PyInstaller command as before.
+             - Verified the new exe launches and creates the expected
+               hidden "Water Buddy" window (EnumWindows check).
+             - Committed + pushed source (main.py, settings.py,
+               settings_ui.py, ui.py).
+             - Created Release v1.2.0 with the rebuilt exe attached:
+               https://github.com/Gauravpy-ctrl/water-buddy/releases/tag/v1.2.0
+             - Relaunched Water_Buddy.exe afterward since an instance had
+               been running (via Startup) before the rebuild forced it
+               closed - restored to the state the user had it in.
+
+STATUS: Custom message + customizable timer are both live in source and the
+        installed exe. v1.2.0 is the current published release.
