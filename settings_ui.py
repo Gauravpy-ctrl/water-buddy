@@ -7,14 +7,16 @@ from typing import Callable
 
 
 class SettingsDialog:
-    """A small modal dialog for customizing the reminder/snooze intervals."""
+    """A small modal dialog for customizing the reminder/snooze intervals
+    and the reminder message."""
 
     def __init__(
         self,
         parent: tk.Tk,
         current_reminder_minutes: int,
         current_snooze_minutes: int,
-        on_save: Callable[[int, int], None],
+        current_custom_message: str,
+        on_save: Callable[[int, int, str], None],
     ) -> None:
         self.on_save = on_save
 
@@ -40,8 +42,20 @@ class SettingsDialog:
         ).grid(row=1, column=1, padx=8)
         tk.Label(frame, text="minutes").grid(row=1, column=2, sticky="w")
 
+        tk.Label(frame, text="Custom message").grid(row=2, column=0, sticky="w", pady=(12, 2))
+        self.message_var = tk.StringVar(value=current_custom_message)
+        tk.Entry(
+            frame, textvariable=self.message_var, width=34
+        ).grid(row=3, column=0, columnspan=3, sticky="we", pady=(0, 4))
+        tk.Label(
+            frame,
+            text="Leave blank to use the default greeting.",
+            font=("Segoe UI", 8),
+            fg="#666666",
+        ).grid(row=4, column=0, columnspan=3, sticky="w")
+
         button_row = tk.Frame(frame)
-        button_row.grid(row=2, column=0, columnspan=3, pady=(14, 0))
+        button_row.grid(row=5, column=0, columnspan=3, pady=(14, 0))
         tk.Button(
             button_row, text="Save", width=10, command=self._handle_save
         ).pack(side="left", padx=5)
@@ -84,5 +98,7 @@ class SettingsDialog:
             )
             return
 
-        self.on_save(reminder_minutes, snooze_minutes)
+        custom_message = self.message_var.get().strip()
+
+        self.on_save(reminder_minutes, snooze_minutes, custom_message)
         self.window.destroy()

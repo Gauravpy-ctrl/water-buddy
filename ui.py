@@ -158,8 +158,9 @@ class DesktopPetUI:
     def window_height(self) -> int:
         return self.WINDOW_HEIGHT
 
-    def show_question(self) -> None:
-        self.set_message(f"💧 Hey {self.USER_NAME}! Did you drink water?")
+    def show_question(self, custom_message: str = "") -> None:
+        message = custom_message or f"💧 Hey {self.USER_NAME}! Did you drink water?"
+        self.set_message(message)
         self.show_buttons()
         self.show_bubble()
 

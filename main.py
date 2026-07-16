@@ -87,11 +87,14 @@ class AppController:
             self.root,
             current_reminder_minutes=self.settings.reminder_minutes,
             current_snooze_minutes=self.settings.snooze_minutes,
+            current_custom_message=self.settings.custom_message,
             on_save=self._apply_settings,
         )
 
-    def _apply_settings(self, reminder_minutes: int, snooze_minutes: int) -> None:
-        self.settings.save(reminder_minutes, snooze_minutes)
+    def _apply_settings(
+        self, reminder_minutes: int, snooze_minutes: int, custom_message: str
+    ) -> None:
+        self.settings.save(reminder_minutes, snooze_minutes, custom_message)
         self.reminders.apply_new_intervals(reminder_minutes, snooze_minutes)
 
     def quit_app(self) -> None:
@@ -154,7 +157,7 @@ class AppController:
         self.animations.set_idle()
 
         self.transition_to(PetState.ASKING)
-        self.ui.show_question()
+        self.ui.show_question(self.settings.custom_message)
 
     def handle_yes_clicked(self) -> None:
         if self.state is not PetState.ASKING:
