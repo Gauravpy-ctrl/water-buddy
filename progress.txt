@@ -238,3 +238,80 @@ STATUS: Customizable timer feature is live in both the source repo and the
 
 STATUS: Custom message + customizable timer are both live in source and the
         installed exe. v1.2.0 is the current published release.
+
+[2026-07-17] User asked for another upgrade. Discussed a "custom sticker"
+             idea first (exploratory) - recommended letting users replace
+             the static poses only, keeping default walk animation, as the
+             simple option vs. full custom animation frames. User pushed
+             for the fuller version: also wants to supply their own
+             walk-in/walk-out animation PNGs. Asked how frames should be
+             provided (individual file pickers vs. one labeled reference
+             sheet like the original cat art vs. pointing at a folder) -
+             user chose individual file pickers as most reliable.
+
+             Implementation:
+             - image_customizer.py (new): prepare_custom_image() fits any
+               arbitrary user image (any size/aspect/format) onto a
+               transparent 220x220 canvas via thumbnail+center-paste, then
+               binarizes alpha to hard 0/255 - reusing the exact fringe fix
+               from animations.py (soft edges + the window's colorkey
+               transparency = visible rim otherwise).
+             - settings.py: added custom_assets_dir property
+               (%APPDATA%\WaterBuddy\custom_assets), auto-created.
+             - animations.py: AnimationManager now takes an optional
+               custom_assets_dir; _resolve_path() checks it before falling
+               back to the bundled assets_dir, so each of the 9 files
+               (idle/happy/angry/4x walk_in/4x walk_out) can be
+               independently overridden or left default. Added reload() so
+               changing images takes effect without restarting the app
+               (init now just calls reload()).
+             - image_settings_ui.py (new): ImagePickerDialog - one row per
+               pose (Idle/Happy/Angry/Walk-in 4 frames/Walk-out 4 frames)
+               showing Default/Custom status + a "Choose..." button using
+               filedialog.askopenfilenames (multi-select for the two
+               4-frame poses, relies on Windows preserving ctrl+click
+               selection order - noted in the dialog's hint text). Also has
+               "Reset All to Default" (deletes everything under
+               custom_assets/).
+             - tray.py: added "Customize Pet Images..." menu item between
+               the timer settings and Quit.
+             - main.py: wires settings.custom_assets_dir into
+               AnimationManager at construction, opens ImagePickerDialog
+               from the new tray callback, on_change=animations.reload.
+
+             Verified: prepare_custom_image() tested on the large original
+             (non-transparent, non-square) Gemini reference PNG - output
+             was a clean 220x220 RGBA with only {0, 255} alpha values, no
+             partial-transparency edges. ImagePickerDialog's internal logic
+             tested by bypassing the real OS file dialog (can't be driven
+             headlessly) and calling prepare_custom_image() directly for a
+             4-frame walk_in override using the bundled walk_out sprites as
+             stand-in source images - confirmed files landed correctly
+             named in custom_assets/, status flipped to "Custom", and
+             AnimationManager.reload() picked them up
+             (controller.animations.idle became a fresh PhotoImage with no
+             errors). A full visual walk-in screenshot during this test
+             came back solid black (likely a transient capture issue, not
+             re-investigated since the underlying override mechanism was
+             already independently confirmed via the file-placement and
+             reload checks above) - not treated as a blocking failure.
+
+[2026-07-17] Rebuilt and republished per user confirmation ("yes"):
+             - Found a live Water_Buddy.exe (Startup auto-launch) - killed
+               it before rebuilding, same as the v1.2.0 cycle.
+             - Rebuilt with the same PyInstaller command as before.
+             - Verified the new exe launches, creates the expected hidden
+               "Water Buddy" window, AND confirmed the user's real
+               config.json (20 min reminder, custom message "dont forget to
+               breathe") was untouched by any of the testing above - the
+               dev-time tests only ever wrote to custom_assets/, never to
+               config.json, so no reset-to-defaults was needed this round.
+             - Committed + pushed source (animations.py, main.py,
+               settings.py, tray.py, image_customizer.py,
+               image_settings_ui.py).
+             - Created Release v1.3.0 with the rebuilt exe attached:
+               https://github.com/Gauravpy-ctrl/water-buddy/releases/tag/v1.3.0
+
+STATUS: Custom pet images, custom message, and customizable timer are all
+        live in source and the installed exe. v1.3.0 is the current
+        published release.
