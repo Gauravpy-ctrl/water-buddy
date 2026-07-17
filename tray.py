@@ -19,11 +19,13 @@ class TrayIcon:
         self,
         icon_path: Path,
         on_open_settings: Callable[[], None],
+        on_customize_images: Callable[[], None],
         on_quit: Callable[[], None],
     ) -> None:
         image = Image.open(icon_path)
         menu = pystray.Menu(
             pystray.MenuItem("Set Reminder Timer...", lambda icon, item: on_open_settings()),
+            pystray.MenuItem("Customize Pet Images...", lambda icon, item: on_customize_images()),
             pystray.MenuItem("Quit", lambda icon, item: on_quit()),
         )
         self.icon = pystray.Icon("water_buddy", image, "Water Buddy", menu)

@@ -10,6 +10,7 @@ import tkinter as tk
 import customtkinter as ctk
 
 from animations import AnimationManager
+from image_settings_ui import ImagePickerDialog
 from reminder import ReminderManager
 from settings import Settings
 from settings_ui import SettingsDialog
@@ -43,13 +44,14 @@ class AppController:
         self.root.title("Water Buddy")
 
         self.ui = DesktopPetUI(self.root)
+        self.settings = Settings()
         self.animations = AnimationManager(
             root=self.root,
             image_label=self.ui.image_label,
             assets_dir=Path(__file__).resolve().parent / "assets",
+            custom_assets_dir=self.settings.custom_assets_dir,
         )
 
-        self.settings = Settings()
         self.reminders = ReminderManager(
             self.root,
             self.handle_reminder,
@@ -76,11 +78,19 @@ class AppController:
         self.tray = TrayIcon(
             icon_path=Path(__file__).resolve().parent / "assets" / "icon.ico",
             on_open_settings=lambda: self.root.after(0, self.open_settings),
+            on_customize_images=lambda: self.root.after(0, self.open_image_settings),
             on_quit=lambda: self.root.after(0, self.quit_app),
         )
         self.tray.start()
 
         self.root.mainloop()
+
+    def open_image_settings(self) -> None:
+        ImagePickerDialog(
+            self.root,
+            custom_assets_dir=self.settings.custom_assets_dir,
+            on_change=self.animations.reload,
+        )
 
     def open_settings(self) -> None:
         SettingsDialog(

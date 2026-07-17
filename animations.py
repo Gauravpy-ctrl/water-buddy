@@ -9,32 +9,53 @@ from PIL import Image, ImageTk
 
 
 class AnimationManager:
-    """Loads and displays pet animation frames."""
+    """Loads and displays pet animation frames. Any filename present in
+    custom_assets_dir overrides the matching bundled asset, so users can
+    replace individual poses/frames without needing all of them."""
 
     FRAME_DELAY_MS = 120
 
-    def __init__(self, root: tk.Tk, image_label: tk.Label, assets_dir: Path) -> None:
+    WALK_IN_FILES = ["walk_in1.png", "walk_in2.png", "walk_in3.png", "walk_in4.png"]
+    WALK_OUT_FILES = ["walk_out1.png", "walk_out2.png", "walk_out3.png", "walk_out4.png"]
+
+    def __init__(
+        self,
+        root: tk.Tk,
+        image_label: tk.Label,
+        assets_dir: Path,
+        custom_assets_dir: Path | None = None,
+    ) -> None:
         self.root = root
         self.image_label = image_label
         self.assets_dir = assets_dir
+        self.custom_assets_dir = custom_assets_dir
 
         self._after_id: str | None = None
         self._current_frames: list[ImageTk.PhotoImage] = []
         self._frame_index = 0
 
+        self.reload()
+
+    def reload(self) -> None:
+        """(Re)load every pose/frame from custom_assets_dir if present,
+        falling back to the bundled assets_dir. Call after the user
+        changes a custom image so the new artwork takes effect."""
         self.idle = self._load_image("idle.png")
         self.happy = self._load_image("happy.png")
         self.angry = self._load_image("angry.png")
 
-        self.walk_in_frames = self._load_frames(
-            ["walk_in1.png", "walk_in2.png", "walk_in3.png", "walk_in4.png"]
-        )
-        self.walk_out_frames = self._load_frames(
-            ["walk_out1.png", "walk_out2.png", "walk_out3.png", "walk_out4.png"]
-        )
+        self.walk_in_frames = self._load_frames(self.WALK_IN_FILES)
+        self.walk_out_frames = self._load_frames(self.WALK_OUT_FILES)
+
+    def _resolve_path(self, filename: str) -> Path:
+        if self.custom_assets_dir is not None:
+            custom_path = self.custom_assets_dir / filename
+            if custom_path.exists():
+                return custom_path
+        return self.assets_dir / filename
 
     def _load_image(self, filename: str) -> ImageTk.PhotoImage:
-        path = self.assets_dir / filename
+        path = self._resolve_path(filename)
         if not path.exists():
             raise FileNotFoundError(f"Missing asset: {path}")
 

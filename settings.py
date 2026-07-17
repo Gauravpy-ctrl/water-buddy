@@ -18,6 +18,9 @@ class Settings:
         config_dir.mkdir(parents=True, exist_ok=True)
         self.path = config_dir / "config.json"
 
+        self.custom_assets_dir = config_dir / "custom_assets"
+        self.custom_assets_dir.mkdir(parents=True, exist_ok=True)
+
         self.reminder_minutes = self.DEFAULT_REMINDER_MINUTES
         self.snooze_minutes = self.DEFAULT_SNOOZE_MINUTES
         self.custom_message = self.DEFAULT_CUSTOM_MESSAGE
